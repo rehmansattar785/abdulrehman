@@ -1,0 +1,211 @@
+from pathlib import Path
+import zipfile
+
+project = Path("/mnt/data/ai-coding-assistant")
+project.mkdir(exist_ok=True)
+
+files = {
+    "ai_coder.py": '''"""
+AI Coding Assistant
+Generate code, explain code, debug errors, and convert programming languages.
+"""
+
+import os
+from openai import OpenAI
+
+def main():
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        print("Error: Please set the OPENAI_API_KEY environment variable.")
+        print("See README.md for setup instructions.")
+        return
+
+    client = OpenAI(api_key=api_key)
+
+    instructions = """
+You are an expert AI coding assistant.
+Help users write, understand, debug, and improve code.
+When generating code:
+- Use clear, readable code.
+- Include useful comments where appropriate.
+- Explain how to run the code.
+- Mention important assumptions.
+- Never claim code was tested unless it actually was.
+For debugging, explain the cause and show a corrected version.
+"""
+
+    print("\\n🤖 Welcome to AI Coding Assistant!")
+    print("Ask for code, explanations, debugging, or language conversion.")
+    print("Type 'exit' to quit.\\n")
+
+    while True:
+        try:
+            prompt = input("You: ").strip()
+        except (KeyboardInterrupt, EOFError):
+            print("\\nGoodbye!")
+            break
+
+        if prompt.lower() in {"exit", "quit"}:
+            print("Goodbye!")
+            break
+        if not prompt:
+            continue
+
+        try:
+            response = client.responses.create(
+                model="gpt-4.1-mini",
+                instructions=instructions,
+                input=prompt,
+            )
+            print("\\nAI Assistant:\\n")
+            print(response.output_text)
+            print()
+        except Exception as error:
+            print(f"\\nSomething went wrong: {error}\\n")
+
+
+if __name__ == "__main__":
+    main()
+''',
+    "README.md": '''# AI Coding Assistant 🤖
+
+A beginner-friendly Python project that uses the OpenAI API to help you generate code, explain programming concepts, debug errors, and convert code between languages.
+
+## Features
+
+- Generate code from plain-English instructions
+- Explain existing code
+- Help identify and fix programming errors
+- Convert code between programming languages
+- Interactive command-line chat
+
+## Requirements
+
+- Python 3.9 or newer
+- An OpenAI API key
+- Internet connection
+
+## 1. Download or clone the project
+
+```bash
+git clone https://github.com/YOUR-USERNAME/AI-Coding-Assistant.git
+cd AI-Coding-Assistant
+```
+
+## 2. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+## 3. Set your API key
+
+Do not write your API key directly in the Python file and never upload it to GitHub.
+
+**Windows PowerShell**
+```powershell
+$env:OPENAI_API_KEY="your_api_key_here"
+```
+
+**macOS / Linux**
+```bash
+export OPENAI_API_KEY="your_api_key_here"
+```
+
+Create an API key through the OpenAI platform. API usage may be billed separately from a ChatGPT subscription.
+
+## 4. Run the assistant
+
+```bash
+python ai_coder.py
+```
+
+## Example prompts
+
+```text
+Create a calculator in Python.
+Explain this Python code line by line.
+Find the bug in this JavaScript function: ...
+Convert this Python function into JavaScript.
+Build a simple HTML and CSS landing page.
+```
+
+## How it works
+
+1. Python reads your prompt in the terminal.
+2. The OpenAI client sends it to the Responses API.
+3. The model generates an answer based on the coding-assistant instructions.
+4. The answer is printed in the terminal.
+
+## Project structure
+
+```text
+AI-Coding-Assistant/
+├── ai_coder.py
+├── requirements.txt
+├── .gitignore
+└── README.md
+```
+
+## Security
+
+- Keep your API key private.
+- Do not commit `.env` files or secret keys.
+- Review AI-generated code before running it, especially code that changes files, accesses networks, or handles sensitive data.
+
+## License
+
+This project is provided under the MIT License. See `LICENSE` for details.
+''',
+    "requirements.txt": "openai>=1.0.0\n",
+    ".gitignore": '''# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Secrets and local settings
+.env
+.env.*
+!.env.example
+
+# Editor / OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+''',
+    ".env.example": "OPENAI_API_KEY=your_api_key_here\n",
+    "LICENSE": '''MIT License
+
+Copyright (c) 2026
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+'''
+}
+
+for name, content in files.items():
+    (project / name).write_text(content, encoding="utf-8")
+
+zip_path = Path("/mnt/data/AI-Coding-Assistant-GitHub-Project.zip")
+with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+    for path in project.rglob("*"):
+        if path.is_file():
+            zf.write(path, path.relative_to(project.parent))
+
+print(f"Created project folder: {project}")
+print(f"Created ZIP: {zip_path}")
+print("Files:", ", ".join(files.keys()))
